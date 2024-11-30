@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String     @db.VarChar(100)
+  lastName  String?    @db.VarChar(100)
+  email     String     @unique @db.VarChar(255)
+  password  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Playlist  Playlist[]
+
+  @@map("user")
+}
+
+model Music {
+  id             String           @id @default(uuid())
+  path           String
+  name           String
+  thumbnailPath  String
+  authorId       String
+  author         Author           @relation(fields: authorId, references: id)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  PlaylistMusics PlaylistMusics[]
+
+  @@unique([authorId, name], name: "unique_music_author_name")
+  @@map("music")
+}
+
+model Author {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Music     Music[]
+
+  @@map("author")
+}
+
+model Playlist {
+  id             String           @id @default(uuid())
+  name           String
+  isPublic       Boolean          @default(false)
+  userId         String
+  user           User             @relation(fields: userId, references: id)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  PlaylistMusics PlaylistMusics[]
+
+  @@map("playlist")
+}
+
+model PlaylistMusics {
+  id         String   @id @default(uuid())
+  playlistId String
+  musicId    String
+  playlist   Playlist @relation(fields: playlistId, references: id)
+  music      Music    @relation(fields: musicId, references: id)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([playlistId, musicId], name: "unique_music_playlist")
+  @@map("playlist_musics")
+}
